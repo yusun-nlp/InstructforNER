@@ -17,15 +17,26 @@ class NERPipe(Pipe):
 
     def process(self, data_bundle):
         def label_process(ins):
-            self.vocab.update(ins['entity_tags'])
             tgt_labels = []
             for idx, tag in enumerate(ins['entity_tags']):
                 tgt_labels.append((tag, (ins['entity_spans'][idx][0], ins['entity_spans'][idx][1])))
-            return Instance(tgt_tokens=tgt_labels)
+            return Instance(tgt_spans=tgt_labels)
 
-        data_bundle.apply_more(label_process, progress_bar='rich', progress_desc='get vocab')
+        def get_vocab(ins):
+            self.vocab.update([tag[0] for tag in ins['tgt_spans']])
+            return {}
+
+        if self.dataset == 'ontonotes4':
+            data_bundle.apply_field(_bmeso_tag_to_spans, field_name='target', new_field_name='tgt_spans', num_proc=4,
+                                    progress_desc='label process')
+        elif 'ace' not in self.dataset:
+            data_bundle.apply_field(_bio_tag_to_spans, field_name='target', new_field_name='tgt_spans', num_proc=4,
+                                    progress_desc='label process')
+        else:
+            data_bundle.apply_more(label_process, progress_bar='rich', num_proc=4, progress_desc='label process')
+        data_bundle.apply_more(get_vocab, progress_bar='rich', progress_desc='get vocab')
         data_bundle.set_vocab(self.vocab, 'tgt_tokens')
-        data_bundle.set_ignore('entity_spans', 'entity_tags', 'prev_contxt', 'after_contxt')
+        data_bundle.set_ignore('entity_spans', 'entity_tags', 'prev_contxt', 'after_contxt', 'target')
         return data_bundle
 
     def process_from_file(self, paths):
@@ -33,17 +44,13 @@ class NERPipe(Pipe):
             data_bundle = NestedLoader().load(paths)
         elif self.dataset == 'conll03':
             data_bundle = Conll2003NERLoader().load(paths)
-            data_bundle.apply_field(_bio_tag_to_spans, field_name='target', new_field_name='target')
         elif self.dataset == 'ontonotes4':
             data_bundle = OntoNotes4NERLoader().load(paths)
-            data_bundle.apply_field(_bmeso_tag_to_spans, field_name='target', new_field_name='target')
         elif self.dataset == 'msra':
             data_bundle = MsraNERLoader().load()
             data_bundle.rename_field('raw_chars', 'raw_words')
-            data_bundle.apply_field(_bio_tag_to_spans, field_name='target', new_field_name='target')
         elif self.dataset == 'ontonotes5':
             data_bundle = OntoNotes5NERLoader().load(paths)
-            data_bundle.apply_field(_bio_tag_to_spans, field_name='target', new_field_name='target')
         else:
             if 'disease' in self.dataset:
                 vocab = ['O', 'B-Disease', 'I-Disease']
@@ -59,7 +66,6 @@ class NERPipe(Pipe):
             data_bundle.set_dataset(DataSet(dataset['test'].to_dict())[:-1], 'test')
             data_bundle.apply_field(lambda x: [vocab[idx] for idx in x], field_name='target', new_field_name='target',
                                     progress_desc='convert index to label')
-            data_bundle.apply_field(_bio_tag_to_spans, field_name='target', new_field_name='target')
         data_bundle = self.process(data_bundle)
         return data_bundle
 

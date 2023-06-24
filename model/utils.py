@@ -1,8 +1,8 @@
 from bidict import bidict
 
-label2desc = bidict({'Disease': 'Disease',
-                     'Chemical': 'Chemical',
-                     'Gene': 'Gene',
+label2desc = bidict({'DISEASE': 'Disease',
+                     'CHEMICAL': 'Chemical',
+                     'GENE': 'Gene',
                      'PER': 'Person',
                      'ORG': 'Organization',
                      'MISC': 'Miscellaneous',
@@ -18,6 +18,7 @@ label2desc = bidict({'Disease': 'Disease',
                      "EVENT": 'Event',
                      'VEH': 'Vehicle',
                      'WEA': 'Weapon'})
+
 
 def format_en_entities(pred_text, raw_words, label_list):
     raw_words = [word.lower() for word in raw_words]
@@ -39,7 +40,7 @@ def format_en_entities(pred_text, raw_words, label_list):
         pred_dicts = {label_list[0]: pred_labels}
     else:
         label_list = [label.lower() for label in label_list]
-        # rule1：split event type and event span
+        # split event type and event span
         if '\n' in pred_text:
             pred_labels = pred_text.split('\n')
         elif ';' in pred_text:
@@ -119,6 +120,7 @@ def format_en_entities(pred_text, raw_words, label_list):
 
     return pred_entities, sent_invalid, format_negative, span_negative
 
+
 def format_cn_entities(pred_text, raw_words, label_list):
     raw_text = ''.join(raw_words)
     pred_text = pred_text.lower().strip()
@@ -130,7 +132,7 @@ def format_cn_entities(pred_text, raw_words, label_list):
         return pred_entities, 0, 0, 0
 
     label_list = [label.lower() for label in label_list]
-    # rule1：split event type and event span
+    # split event type and event span
     if '\n' in pred_text:
         pred_labels = pred_text.split('\n')
     elif ';' in pred_text:

@@ -3,22 +3,23 @@ from collections import Counter
 from fastNLP import Metric
 from fastNLP.core.metrics.utils import _compute_f_pre_rec
 
+
 class NERSpanMetrics(Metric):
     def __init__(self, f_type='micro', beta=1, backend='auto', aggregate_when_get_metric: bool = None):
         super().__init__(backend, aggregate_when_get_metric)
-        self.sent_invalid = 0
-        self.format_negative = 0
-        self.span_negative = 0
-        self.false_positive = 0
-        self.true_positive = 0
-        self.negative = 0
-
         self._tp = Counter()
         self._fp = Counter()
         self._fn = Counter()
         self.f_type = f_type
         self.beta = beta
         self.beta_square = self.beta ** 2
+
+        self.sent_invalid = 0
+        self.format_negative = 0
+        self.span_negative = 0
+        self.false_positive = 0
+        self.true_positive = 0
+        self.negative = 0
 
     def update(self, pred, target, invalid_sent=0, format_negative=0, span_negative=0,
                false_positive=0, true_positive=0, negative=0):
@@ -110,7 +111,3 @@ class NERSpanMetrics(Metric):
         evaluate_result['negative'] = self.negative
 
         return evaluate_result
-
-
-if __name__ == '__main__':
-    print(1)
