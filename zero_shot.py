@@ -6,8 +6,8 @@ from fastNLP import Evaluator
 import fitlog
 
 from data.pipe import NERPipe
-from model.zero_shot_model import ZeroEnNERModel, ZeroZhNERModel
 from metrics import NERSpanMetrics
+from model.zero_shot_model import ZeroEnNERModel, ZeroZhNERModel
 
 # settings
 parser = argparse.ArgumentParser()
@@ -35,7 +35,7 @@ fitlog.set_rng_seed(123)
 
 
 # process data
-@cache_results('caches/cache.pkl', _refresh=True)
+@cache_results('caches/cache.pkl', _refresh=False)
 def get_data(dataset):
     if dataset == 'ontonotes4':
         paths = {'train': '../data/OntoNote4NER/train.char.bmes',
